@@ -8,12 +8,15 @@
 
 import UIKit
 
+let reuseIdentifier = "ImageCell"
+
 class ImageCell: UICollectionViewCell {
 
     @IBOutlet weak var checkMark: CheckMark!
     @IBOutlet weak var cellImageView: UIImageView!
     override func awakeFromNib() {
         super.awakeFromNib()
+        self.checkMark.checked = false
         // Initialization code
     }
 

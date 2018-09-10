@@ -8,51 +8,27 @@
 
 import UIKit
 import Photos
-import Alamofire
 
-private let reuseIdentifier = "ImageCell"
+protocol GalleryDelegate {
+    func sendAssetsToParent(assets : [PHAsset])
+}
+ 
+
 
 class LocalCollectionViewController: UICollectionViewController {
     
     var photosAsset: PHFetchResult<PHAsset>!
     var assetThumbnailSize: CGSize!
     var selections = [PHAsset]()
-    var url : URL = URL(string: "lala")!
+    var delegate : GalleryDelegate!
     
     var barButtonItem : UIBarButtonItem {
        return UIBarButtonItem(title: "Add", style: .done, target: self, action: #selector(self.handleBarButtonItem(sender:)))
     }
     
-    func handleBarButtonItem(sender : Any) {
-        
-        let image = UIImage.init(named: "myImage")
-        let imgData = UIImageJPEGRepresentation(image!, 0.2)!
-        
-        let parameters = ["name": "myImage"] 
-        
-        Alamofire.upload(multipartFormData: { multipartFormData in
-            multipartFormData.append(imgData, withName: "fileset",fileName: "file.jpg", mimeType: "image/jpg")
-            for (key, value) in parameters {
-                multipartFormData.append(value.data(using: String.Encoding.utf8)!, withName: key)
-            }
-        },
-                         to:"/mampp/htdocs/photoGallery/store_image.php")
-        { (result) in
-            switch result {
-            case .success(let upload, _, _):
-                
-                upload.uploadProgress(closure: { (progress) in
-                    print("Upload Progress: \(progress.fractionCompleted)")
-                })
-                
-                upload.responseJSON { response in
-                    print("response: \(response.result.value)")
-                }
-                
-            case .failure(let encodingError):
-                print(encodingError)  
-            }
-        }
+    @objc func handleBarButtonItem(sender : Any) {
+        delegate.sendAssetsToParent(assets: selections)
+        self.navigationController?.popViewController(animated: true)
     }
     
     override func viewDidLoad() {
@@ -86,15 +62,6 @@ class LocalCollectionViewController: UICollectionViewController {
         super.didReceiveMemoryWarning()
     }
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using [segue destinationViewController].
-        // Pass the selected object to the new view controller.
-    }
-    */
 
     // MARK: UICollectionViewDataSource
 

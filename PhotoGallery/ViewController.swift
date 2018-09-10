@@ -8,59 +8,101 @@
 
 import UIKit
 import Photos
-import Alamofire
-import SwiftyJSON
 
 class ViewController: UIViewController{
 
     @IBOutlet weak var collectionView: UICollectionView!
     
+    
+    var photoAssets : [PHAsset] = []
+    var assetThumbnailSize: CGSize!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        self.collectionView.delegate = self
+        self.collectionView.dataSource = self
+        self.collectionView.register(UINib(nibName: "ImageCell", bundle: nil),
+                                 forCellWithReuseIdentifier: reuseIdentifier)
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        // Determine the size of the thumbnails
+        let size = UIScreen.main.bounds.size
+//        let cellSize = (collectionViewLayout as! UICollectionViewFlowLayout).itemSize
+        assetThumbnailSize = CGSize(width: size.width / 3, height: size.width/3)
+    }
 
     @IBAction func handleAddBarButton(_ sender: Any) {
-        let vc = self.storyboard?.instantiateViewController(withIdentifier: "LocalCollectionViewController") as! LocalCollectionViewController
-        
-        self.navigationController?.pushViewController(vc, animated: true)
+        let controller = self.storyboard?.instantiateViewController(withIdentifier: "LocalCollectionViewController") as! LocalCollectionViewController
+        controller.delegate = self
+        self.navigationController?.pushViewController(controller, animated: true)
     }
     
     
-    func loadImage() {
+
+    
+    //    func convertAssetToImage(asset : PHAsset) {
+    //        PHImageManager.default().requestImage(for: asset, targetSize: self.assetThumbnailSize, contentMode: .aspectFill, options: nil, resultHandler: {(result, info)in
+    //            if let image = result {
+    //
+    //            }
+    //        })
+    //    }
+
+}
+
+extension ViewController : GalleryDelegate {
+    func sendAssetsToParent(assets: [PHAsset]) {
+        photoAssets = assets
+        self.collectionView.reloadData()
+    }
+}
+
+extension ViewController : UICollectionViewDataSource, UICollectionViewDelegate {
+    // MARK: UICollectionViewDataSource
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return 1
+    }
+    
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return photoAssets.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let asset = photoAssets[indexPath.item]
+        
+        // Dequeue a GridViewCell.
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: String(describing: ImageCell.self), for: indexPath) as? ImageCell
+            else { fatalError("unexpected cell in collection view") }
+        
+        //checkmark configuration
+        cell.checkMark.isHidden = true
+        
+        // insert image into collection view cell
+        PHImageManager.default().requestImage(for: asset, targetSize: self.assetThumbnailSize, contentMode: .aspectFill, options: nil, resultHandler: {(result, info)in
+            if let image = result {
+                cell.setThumbnailImage(thumbNailImage: image)
+            }
+        })
+        
+        
+        
+        return cell
         
     }
     
-//    func GET(URLString : String, parameters : [String: String]?, fromViewController viewController : UIViewController, completion : @escaping (_ output : JSON?) -> Void) {
-//        
-//        let token = ""
-////            Singleton.sharedInstance.tokenAPI
-//        print(token)
-//        var params = parameters
-//        if params == nil {
-//            params = ["token" : token]
-//        } else {
-//            params!["token"] = token
-//        }
-//        
-//        let url = URL(string :"")
-//        
-//        Alamofire.request(.GET, url, parameters: params).responseJSON { (response) in
-//            
-//            switch response.result {
-//            case .Success(let value) :
-//                let swiftyJSON = JSON(value)
-//                completion(output: swiftyJSON)
-//            case .Failure( _) :
-//                self.alertError(forResponse: response, delegate: viewController)
-//            }
-//        }
-//    }
+    // MARK: UICollectionViewDelegate
+
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+    }
 
 }
 
